@@ -8,6 +8,8 @@ import {
   Bot,
 } from "lucide-react";
 
+import logoProfe from './assets/logo.png'; // Asegúrate de que la ruta coincida con donde guardaste la imagen
+
 // Paleta de colores (extraída del tailwind.config del HTML original)
 const colors = {
   onSecondaryFixed: "#07006c",
@@ -56,10 +58,15 @@ const Header = () => (
     style={{ borderColor: "#e2e8f0" }}
   >
     <div className="flex justify-between items-center px-8 py-4 w-full max-w-7xl mx-auto">
-      <div className="flex items-center gap-8">
-        <span className="text-xl font-bold tracking-tighter text-slate-900">
-          Profe++
-        </span>
+            <div className="flex items-center gap-8">
+        {/* Envolver el logo y el texto en su propio div con gap pequeño (gap-2) */}
+        <div className="flex items-center gap-2">
+          <img src={logoProfe} alt="Profe++ Logo" className="h-14 w-14 object-contain" />
+          <span className="text-2xl font-bold tracking-tighter text-slate-900">
+            Profe++
+          </span>
+        </div>
+        
         <nav className="hidden md:flex items-center gap-6">
           <a
             href="#"
