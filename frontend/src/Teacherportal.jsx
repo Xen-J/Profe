@@ -16,7 +16,7 @@ import {
   AlertTriangle,
   Brain,
 } from "lucide-react";
-
+import logoProfe from './assets/logo.png';
 // Paleta extraída del tailwind.config original (variante azul oscuro del teacher portal)
 const colors = {
   primary: "#1e293b",            // slate-900
@@ -44,10 +44,107 @@ const userAvatar =
 
 // Datos mock
 const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", active: true },
-  { icon: BarChart3, label: "Student Analytics", active: false },
-  { icon: Compass, label: "Proyecto", active: false },
-  { icon: FolderOpen, label: "Ejercicios", active: false },
+  { key: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { key: "analytics", icon: BarChart3, label: "Student Analytics" },
+  { key: "project", icon: Compass, label: "Proyecto" },
+  { key: "exercises", icon: FolderOpen, label: "Ejercicios" },
+  { key: "rubrica", icon: Brain, label: "Rubrica" },
+];
+
+const rubricCriteriaDefaults = [
+  {
+    key: "correctness",
+    label: "Correctitud",
+    description: "Qué tan correcto es el resultado frente a los tests.",
+    weight: 40,
+    enabled: true,
+  },
+  {
+    key: "codeQuality",
+    label: "Calidad de código",
+    description: "Legibilidad, estructura y convenciones de estilo.",
+    weight: 25,
+    enabled: true,
+  },
+  {
+    key: "efficiency",
+    label: "Eficiencia",
+    description: "Uso razonable de complejidad temporal y espacial.",
+    weight: 20,
+    enabled: true,
+  },
+  {
+    key: "reasoning",
+    label: "Explicación y razonamiento",
+    description: "Capacidad de justificar la solución con claridad.",
+    weight: 15,
+    enabled: true,
+  },
+];
+
+const submissionsByTask = [
+  {
+    student: "Carlos Méndez",
+    task: "Python Asyncio Concurrency",
+    score: "86%",
+    tests: "8/10",
+    feedback:
+      "Buena estructura async, pero faltan timeouts y manejo explícito de errores de red.",
+  },
+  {
+    student: "Ana García",
+    task: "Python List Comprehensions",
+    score: "92%",
+    tests: "10/10",
+    feedback:
+      "Excelente uso de comprensión y filtros. Revisar legibilidad en expresiones anidadas.",
+  },
+  {
+    student: "Roberto Silva",
+    task: "Python Memory Management",
+    score: "74%",
+    tests: "7/10",
+    feedback:
+      "Identifica el uso de __slots__, pero no demuestra profiling con tracemalloc en el resultado.",
+  },
+  {
+    student: "Mia Chen",
+    task: "Python Asyncio Concurrency",
+    score: "95%",
+    tests: "10/10",
+    feedback:
+      "Solución sólida y eficiente. Excelente patrón con gather y separación de responsabilidades.",
+  },
+];
+
+const stemIdeaPills = [
+  "Robot seguidor de línea con Python",
+  "Análisis de calidad del aire con sensores",
+  "Predicción de consumo energético escolar",
+  "Mini satélite: telemetría y visualización",
+  "Visión computacional para reciclaje",
+  "Simulación de epidemias en aula",
+];
+
+const classroomExercises = [
+  {
+    id: "#4029",
+    title: "Python Asyncio Concurrency",
+    level: "Medium",
+    objective: "Manejar múltiples requests HTTP concurrentes con asyncio y aiohttp.",
+  },
+  {
+    id: "#3911",
+    title: "Python List Comprehensions",
+    level: "Easy",
+    objective: "Aplicar sintaxis de list comprehensions y filtros de forma legible.",
+  },
+  {
+    id: "#5102",
+    title: "Python Memory Management",
+    level: "Hard",
+    objective: "Optimizar memoria usando __slots__ y análisis con tracemalloc.",
+  },
 ];
 
 const errorTypes = [
@@ -87,11 +184,17 @@ const studentsNeedingHelp = [
 // ----- Sub-componentes -----
 
 const TopBar = () => (
-  <nav
+    <nav
     className="bg-white border-b z-50 flex justify-between items-center w-full px-8 h-16 fixed top-0"
     style={{ borderColor: "#e2e8f0", fontFamily: "Manrope, sans-serif" }}
   >
-    <div className="flex items-center gap-8">
+    <div className="flex items-center gap-2">
+      {/* Aquí insertamos el logo junto al texto */}
+      <img
+        src={logoProfe}
+        alt="Profe++ Logo"
+        className="w-8 h-8 object-contain"
+      />
       <span
         className="text-xl font-extrabold tracking-tighter"
         style={{ color: colors.secondary }}
@@ -118,7 +221,7 @@ const TopBar = () => (
   </nav>
 );
 
-const Sidebar = () => (
+const Sidebar = ({ activeSection, onNavigate }) => (
   <aside
     className="bg-white border-r text-sm font-medium h-full w-64 flex flex-col fixed left-0 top-0 pt-20 pb-8 px-4 gap-2"
     style={{
@@ -143,10 +246,16 @@ const Sidebar = () => (
 
     {/* Nav */}
     <nav className="flex-1 space-y-1">
-      {sidebarItems.map(({ icon: Icon, label, active }) => (
+      {sidebarItems.map(({ key, icon: Icon, label }) => {
+        const active = activeSection === key;
+        return (
         <a
           key={label}
           href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate(key);
+          }}
           className="flex items-center gap-3 px-4 py-3 transition-all duration-200 ease-in-out hover:translate-x-1"
           style={
             active
@@ -170,13 +279,15 @@ const Sidebar = () => (
           <Icon className="w-5 h-5" />
           {label}
         </a>
-      ))}
+        );
+      })}
     </nav>
 
     {/* CTA */}
     <button
       className="text-white mx-2 py-3 rounded-lg font-bold text-xs uppercase tracking-wider mb-8 transition-all hover:shadow-lg active:scale-95"
       style={{ backgroundColor: colors.secondary }}
+      onClick={() => onNavigate("project")}
       onMouseEnter={(e) =>
         (e.currentTarget.style.backgroundColor = colors.secondaryContainer)
       }
@@ -615,9 +726,384 @@ const AiInsightsFooter = () => (
   </div>
 );
 
+const StudentAnalyticsView = () => {
+  const avgScore = Math.round(
+    submissionsByTask
+      .map((row) => Number(row.score.replace("%", "")))
+      .reduce((a, b) => a + b, 0) / submissionsByTask.length
+  );
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1
+          className="text-4xl font-bold"
+          style={{ color: colors.primary, fontFamily: "Manrope, sans-serif" }}
+        >
+          Student Analytics
+        </h1>
+        <p className="mt-1" style={{ color: colors.onSurfaceVariant }}>
+          Estadísticas y feedback del código enviado por estudiante y por tarea.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white border rounded-xl p-5" style={{ borderColor: colors.outlineVariant }}>
+          <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: colors.onSurfaceVariant }}>
+            Entregas revisadas
+          </p>
+          <p className="text-3xl font-bold mt-1" style={{ color: colors.primary }}>
+            {submissionsByTask.length}
+          </p>
+        </div>
+        <div className="bg-white border rounded-xl p-5" style={{ borderColor: colors.outlineVariant }}>
+          <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: colors.onSurfaceVariant }}>
+            Promedio de nota
+          </p>
+          <p className="text-3xl font-bold mt-1" style={{ color: colors.secondary }}>
+            {avgScore}%
+          </p>
+        </div>
+        <div className="bg-white border rounded-xl p-5" style={{ borderColor: colors.outlineVariant }}>
+          <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: colors.onSurfaceVariant }}>
+            Feedback crítico
+          </p>
+          <p className="text-3xl font-bold mt-1" style={{ color: colors.error }}>
+            2
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white border rounded-xl overflow-hidden" style={{ borderColor: colors.outlineVariant }}>
+        <div className="grid grid-cols-12 px-6 py-4 border-b text-xs font-bold uppercase tracking-wider" style={{ borderColor: colors.outlineVariant, color: colors.onSurfaceVariant }}>
+          <div className="col-span-2">Estudiante</div>
+          <div className="col-span-3">Tarea</div>
+          <div className="col-span-1">Nota</div>
+          <div className="col-span-1">Tests</div>
+          <div className="col-span-5">Feedback</div>
+        </div>
+        {submissionsByTask.map((row) => (
+          <div key={`${row.student}-${row.task}`} className="grid grid-cols-12 px-6 py-4 border-b last:border-b-0 items-start gap-3" style={{ borderColor: "#eef2f7" }}>
+            <div className="col-span-2 font-semibold text-slate-900">{row.student}</div>
+            <div className="col-span-3 text-slate-700">{row.task}</div>
+            <div className="col-span-1 font-bold" style={{ color: colors.secondary }}>{row.score}</div>
+            <div className="col-span-1 text-slate-600">{row.tests}</div>
+            <div className="col-span-5 text-sm text-slate-600 leading-relaxed">{row.feedback}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ProjectView = () => (
+  <div className="space-y-6">
+    <header>
+      <h1
+        className="text-4xl font-bold"
+        style={{ color: colors.primary, fontFamily: "Manrope, sans-serif" }}
+      >
+        Crear Proyecto STEM con Python
+      </h1>
+      <p className="mt-1" style={{ color: colors.onSurfaceVariant }}>
+        Diseña una actividad guiada para la clase y usa ideas STEM como punto de partida.
+      </p>
+    </header>
+
+    <div className="bg-white border rounded-xl p-6 space-y-5" style={{ borderColor: colors.outlineVariant }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input
+          type="text"
+          placeholder="Título del proyecto"
+          className="border rounded-lg px-4 py-3 outline-none"
+          style={{ borderColor: colors.outlineVariant }}
+        />
+        <input
+          type="text"
+          placeholder="Curso / nivel"
+          className="border rounded-lg px-4 py-3 outline-none"
+          style={{ borderColor: colors.outlineVariant }}
+        />
+      </div>
+      <textarea
+        rows={4}
+        placeholder="Describe objetivo, entregables y criterios de evaluación"
+        className="w-full border rounded-lg px-4 py-3 outline-none"
+        style={{ borderColor: colors.outlineVariant }}
+      />
+
+      <div>
+        <p className="text-sm font-semibold mb-2" style={{ color: colors.primary }}>
+          Ideas STEM sugeridas
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {stemIdeaPills.map((idea) => (
+            <button
+              key={idea}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold border hover:bg-blue-50"
+              style={{ borderColor: colors.outlineVariant, color: colors.primary }}
+            >
+              {idea}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          className="text-white px-5 py-2.5 rounded-lg font-bold text-sm"
+          style={{ backgroundColor: colors.secondary }}
+        >
+          Guardar borrador
+        </button>
+        <button
+          className="px-5 py-2.5 rounded-lg font-bold text-sm border"
+          style={{ borderColor: colors.outlineVariant, color: colors.primary }}
+        >
+          Publicar proyecto
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const ExercisesView = () => (
+  <div className="space-y-6">
+    <header>
+      <h1
+        className="text-4xl font-bold"
+        style={{ color: colors.primary, fontFamily: "Manrope, sans-serif" }}
+      >
+        Biblioteca de Ejercicios
+      </h1>
+      <p className="mt-1" style={{ color: colors.onSurfaceVariant }}>
+        Aquí se listan las tareas del estudiante y puedes editar cada problema.
+      </p>
+    </header>
+
+    <div className="space-y-4">
+      {classroomExercises.map((exercise) => (
+        <div
+          key={exercise.id}
+          className="bg-white border rounded-xl p-5 flex flex-col md:flex-row md:items-center gap-4 md:gap-6"
+          style={{ borderColor: colors.outlineVariant }}
+        >
+          <div className="min-w-[86px] text-center rounded-lg border px-3 py-2" style={{ borderColor: "#e2e8f0", backgroundColor: "#f8fafc" }}>
+            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">ID</p>
+            <p className="font-bold text-slate-700">{exercise.id}</p>
+          </div>
+
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-lg font-semibold text-slate-900">{exercise.title}</h3>
+              <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border" style={{ borderColor: "#dbeafe", backgroundColor: "#eff6ff", color: colors.secondary }}>
+                {exercise.level}
+              </span>
+            </div>
+            <p className="text-sm text-slate-600">{exercise.objective}</p>
+          </div>
+
+          <button
+            className="px-4 py-2 rounded-lg text-sm font-bold border hover:bg-slate-50"
+            style={{ borderColor: colors.outlineVariant, color: colors.primary }}
+          >
+            Editar problema
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const RubricaView = () => {
+  const [criteria, setCriteria] = React.useState(rubricCriteriaDefaults);
+  const [strictness, setStrictness] = React.useState("balanced");
+  const [plagiarismCheck, setPlagiarismCheck] = React.useState(true);
+  const [explanationRequired, setExplanationRequired] = React.useState(true);
+
+  const enabledWeight = criteria
+    .filter((item) => item.enabled)
+    .reduce((acc, item) => acc + item.weight, 0);
+
+  const updateWeight = (key, value) => {
+    setCriteria((prev) =>
+      prev.map((item) =>
+        item.key === key ? { ...item, weight: Number(value) } : item
+      )
+    );
+  };
+
+  const toggleCriterion = (key) => {
+    setCriteria((prev) =>
+      prev.map((item) =>
+        item.key === key ? { ...item, enabled: !item.enabled } : item
+      )
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1
+          className="text-4xl font-bold"
+          style={{ color: colors.primary, fontFamily: "Manrope, sans-serif" }}
+        >
+          Rubrica de Evaluación IA
+        </h1>
+        <p className="mt-1" style={{ color: colors.onSurfaceVariant }}>
+          Configura cómo la IA evalúa cada entrega según criterios y pesos.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white border rounded-xl p-5" style={{ borderColor: colors.outlineVariant }}>
+          <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: colors.onSurfaceVariant }}>
+            Peso total activo
+          </p>
+          <p className="text-3xl font-bold mt-1" style={{ color: enabledWeight === 100 ? colors.secondary : colors.error }}>
+            {enabledWeight}%
+          </p>
+          <p className="text-xs mt-1" style={{ color: colors.onSurfaceVariant }}>
+            Recomendado: 100%
+          </p>
+        </div>
+
+        <div className="bg-white border rounded-xl p-5" style={{ borderColor: colors.outlineVariant }}>
+          <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: colors.onSurfaceVariant }}>
+            Severidad de evaluación
+          </p>
+          <select
+            className="mt-2 w-full border rounded-lg px-3 py-2 text-sm"
+            style={{ borderColor: colors.outlineVariant }}
+            value={strictness}
+            onChange={(e) => setStrictness(e.target.value)}
+          >
+            <option value="lenient">Flexible</option>
+            <option value="balanced">Balanceada</option>
+            <option value="strict">Estricta</option>
+          </select>
+        </div>
+
+        <div className="bg-white border rounded-xl p-5" style={{ borderColor: colors.outlineVariant }}>
+          <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: colors.onSurfaceVariant }}>
+            Reglas adicionales
+          </p>
+          <label className="mt-2 flex items-center justify-between text-sm text-slate-700">
+            <span>Detección de similitud</span>
+            <input
+              type="checkbox"
+              checked={plagiarismCheck}
+              onChange={(e) => setPlagiarismCheck(e.target.checked)}
+              className="accent-blue-600"
+            />
+          </label>
+          <label className="mt-2 flex items-center justify-between text-sm text-slate-700">
+            <span>Explicación obligatoria</span>
+            <input
+              type="checkbox"
+              checked={explanationRequired}
+              onChange={(e) => setExplanationRequired(e.target.checked)}
+              className="accent-blue-600"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="bg-white border rounded-xl p-6 space-y-4" style={{ borderColor: colors.outlineVariant }}>
+        {criteria.map((item) => (
+          <div key={item.key} className="border rounded-lg p-4" style={{ borderColor: "#e2e8f0" }}>
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <div>
+                <p className="font-semibold text-slate-900">{item.label}</p>
+                <p className="text-sm text-slate-500">{item.description}</p>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <span>Activo</span>
+                <input
+                  type="checkbox"
+                  checked={item.enabled}
+                  onChange={() => toggleCriterion(item.key)}
+                  className="accent-blue-600"
+                />
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={item.weight}
+                onChange={(e) => updateWeight(item.key, e.target.value)}
+                disabled={!item.enabled}
+                className="w-full"
+              />
+              <span className="text-sm font-bold min-w-[44px] text-right" style={{ color: colors.primary }}>
+                {item.weight}%
+              </span>
+            </div>
+          </div>
+        ))}
+
+        <div className="flex gap-3 pt-2">
+          <button
+            className="text-white px-5 py-2.5 rounded-lg font-bold text-sm"
+            style={{ backgroundColor: colors.secondary }}
+          >
+            Guardar rubrica
+          </button>
+          <button
+            className="px-5 py-2.5 rounded-lg font-bold text-sm border"
+            style={{ borderColor: colors.outlineVariant, color: colors.primary }}
+            onClick={() => {
+              setCriteria(rubricCriteriaDefaults);
+              setStrictness("balanced");
+              setPlagiarismCheck(true);
+              setExplanationRequired(true);
+            }}
+          >
+            Restablecer valores
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ----- Componente principal -----
 
 export default function TeacherPortal() {
+  const [activeSection, setActiveSection] = React.useState("dashboard");
+
+  const renderSection = () => {
+    if (activeSection === "analytics") return <StudentAnalyticsView />;
+    if (activeSection === "project") return <ProjectView />;
+    if (activeSection === "exercises") return <ExercisesView />;
+    if (activeSection === "rubrica") return <RubricaView />;
+
+    return (
+      <>
+        <DashboardHeader />
+
+        {/* Bento Grid Métricas */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
+          <MetricCard1 />
+          <MetricCard2 />
+          <CircularProgressCard />
+        </div>
+
+        {/* Distribución de errores + Alumnos */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <ErrorDistributionCard />
+          <AttentionRequiredCard />
+        </div>
+
+        {/* Footer AI */}
+        <AiInsightsFooter />
+      </>
+    );
+  };
+
   return (
     <div
       className="min-h-screen"
@@ -628,27 +1114,11 @@ export default function TeacherPortal() {
       }}
     >
       <TopBar />
-      <Sidebar />
+      <Sidebar activeSection={activeSection} onNavigate={setActiveSection} />
 
       <main className="ml-64 pt-16 min-h-screen">
         <div className="max-w-[1400px] mx-auto p-8">
-          <DashboardHeader />
-
-          {/* Bento Grid Métricas */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
-            <MetricCard1 />
-            <MetricCard2 />
-            <CircularProgressCard />
-          </div>
-
-          {/* Distribución de errores + Alumnos */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <ErrorDistributionCard />
-            <AttentionRequiredCard />
-          </div>
-
-          {/* Footer AI */}
-          <AiInsightsFooter />
+          {renderSection()}
         </div>
       </main>
     </div>

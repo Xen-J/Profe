@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   Eye,
 } from "lucide-react";
-
+import logoProfe from './assets/logo.png';
 // Paleta extraída del tailwind.config original (variante azul del dashboard)
 const colors = {
   primary: "#2563eb",          // blue-600
@@ -102,23 +102,88 @@ const difficultyStyles = {
   },
 };
 
+const navigationItems = [
+  { key: "home", icon: Home, label: "Home" },
+  { key: "exercises", icon: Code2, label: "My Exercises" },
+  { key: "leaderboard", icon: BarChart3, label: "Leaderboard" },
+  { key: "settings", icon: Settings, label: "Settings" },
+  { key: "ai", icon: Brain, label: "AI Tutor" },
+];
+
+const topTabs = [
+  { key: "home", label: "Dashboard" },
+  { key: "resources", label: "Resources" },
+];
+
+const classStudents = [
+  { name: "Alex Johnson", score: 96, completed: 12, streak: 18 },
+  { name: "Mia Chen", score: 93, completed: 11, streak: 14 },
+  { name: "Carlos Méndez", score: 89, completed: 10, streak: 9 },
+  { name: "Sofia Patel", score: 84, completed: 9, streak: 7 },
+  { name: "Diego Ramírez", score: 78, completed: 8, streak: 5 },
+  { name: "Ana García", score: 72, completed: 7, streak: 4 },
+];
+
+const demoResources = [
+  {
+    title: "Python for Beginners",
+    type: "Video",
+    duration: "18 min",
+    description:
+      "Syntax, variables and control flow explained with short examples.",
+  },
+  {
+    title: "Asyncio in Practice",
+    type: "Video",
+    duration: "24 min",
+    description: "Concurrent tasks, event loops and when to use asyncio.",
+  },
+  {
+    title: "List Comprehensions Cheat Sheet",
+    type: "Guide",
+    duration: "5 min read",
+    description:
+      "Patterns, filters and nested comprehensions with examples.",
+  },
+  {
+    title: "Debugging Python Code",
+    type: "Video",
+    duration: "14 min",
+    description: "Reading tracebacks and isolating logic errors step by step.",
+  },
+];
+
+const settingsSections = [
+  {
+    title: "Account",
+    items: ["Profile details", "Password", "Email alerts"],
+  },
+  {
+    title: "Learning",
+    items: ["Daily goals", "Difficulty level", "Reminder schedule"],
+  },
+  {
+    title: "Privacy",
+    items: ["Telemetry sharing", "Data export", "Activity visibility"],
+  },
+];
+
 // ----- Sub-componentes -----
 
-const Sidebar = () => (
+const Sidebar = ({ activeView, onNavigate }) => (
   <aside
     className="hidden md:flex flex-col h-screen w-64 border-r bg-white fixed left-0 top-0 z-50 py-4 px-3"
     style={{ borderColor: "#e2e8f0" }}
   >
     {/* Logo */}
-    <div className="flex items-center gap-3 px-3 mb-8">
-      <div
-        className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg"
-        style={{
-          backgroundColor: colors.primary,
-          boxShadow: "0 10px 15px -3px rgba(191, 219, 254, 0.5)",
-        }}
-      >
-        <GraduationCap className="w-6 h-6 text-white" />
+        <div className="flex items-center gap-3 mb-10 px-2">
+      {/* Nuevo ícono usando tu logo */}
+      <div className="w-10 h-10 flex items-center justify-center shrink-0">
+        <img
+          src={logoProfe}
+          alt="Profe++ Logo"
+          className="w-full h-full object-contain"
+        />
       </div>
       <div>
         <h1
@@ -141,7 +206,9 @@ const Sidebar = () => (
 
     {/* Navegación */}
     <nav className="flex-1 space-y-1">
-      {sidebarItems.map(({ icon: Icon, label, active }) => (
+      {navigationItems.map(({ icon: Icon, label, key }) => {
+        const active = activeView === key;
+        return (
         <a
           key={label}
           href="#"
@@ -159,6 +226,10 @@ const Sidebar = () => (
                   fontFamily: "Manrope, sans-serif",
                 }
           }
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate(key);
+          }}
           onMouseEnter={(e) => {
             if (!active) {
               e.currentTarget.style.backgroundColor = "#f8fafc";
@@ -175,7 +246,8 @@ const Sidebar = () => (
           <Icon className="w-5 h-5" />
           {label}
         </a>
-      ))}
+        );
+      })}
     </nav>
 
     {/* Footer del sidebar */}
@@ -216,7 +288,7 @@ const Sidebar = () => (
   </aside>
 );
 
-const TopBar = () => (
+const TopBar = ({ activeTab, onNavigate }) => (
   <header
     className="bg-white border-b h-16 flex justify-between items-center w-full px-6 sticky top-0 z-40"
     style={{ borderColor: "#e2e8f0" }}
@@ -232,31 +304,29 @@ const TopBar = () => (
         Profe++
       </span>
       <div className="hidden lg:flex items-center gap-6">
-        <a
-          href="#"
-          className="border-b-2 pb-1 font-semibold text-sm tracking-tight"
-          style={{
-            color: colors.primary,
-            borderColor: colors.primary,
-            fontFamily: "Manrope, sans-serif",
-          }}
-        >
-          Dashboard
-        </a>
-        <a
-          href="#"
-          className="text-slate-500 font-semibold text-sm tracking-tight transition-colors hover:text-blue-600"
-          style={{ fontFamily: "Manrope, sans-serif" }}
-        >
-          Curriculum
-        </a>
-        <a
-          href="#"
-          className="text-slate-500 font-semibold text-sm tracking-tight transition-colors hover:text-blue-600"
-          style={{ fontFamily: "Manrope, sans-serif" }}
-        >
-          Resources
-        </a>
+        {topTabs.map((tab) => {
+          const active = activeTab === tab.key;
+          return (
+            <a
+              key={tab.key}
+              href="#"
+              className={`font-semibold text-sm tracking-tight transition-colors ${
+                active ? "border-b-2 pb-1" : "text-slate-500 hover:text-blue-600"
+              }`}
+              style={{
+                color: active ? colors.primary : undefined,
+                borderColor: active ? colors.primary : undefined,
+                fontFamily: "Manrope, sans-serif",
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate(tab.key);
+              }}
+            >
+              {tab.label}
+            </a>
+          );
+        })}
       </div>
     </div>
 
@@ -500,13 +570,193 @@ const AiInsightCard = () => (
   </div>
 );
 
-const BottomNav = () => {
+const HomeView = () => (
+  <div className="space-y-12">
+    <WelcomeSection />
+
+    <section>
+      <SectionHeader
+        title="Pending Exercises"
+        accent={colors.primary}
+        link={{ label: "View all", primary: true }}
+      />
+      <div className="flex flex-col gap-4">
+        {pendingExercises.map((exercise) => (
+          <PendingExerciseCard key={exercise.id} exercise={exercise} />
+        ))}
+      </div>
+    </section>
+
+    <section>
+      <SectionHeader
+        title="Recently Solved"
+        accent="#10b981"
+        link={{ label: "Explore history", primary: false }}
+      />
+      <div className="flex flex-col gap-4">
+        {solvedExercises.map((exercise) => (
+          <SolvedExerciseCard key={exercise.title} exercise={exercise} />
+        ))}
+        <AiInsightCard />
+      </div>
+    </section>
+  </div>
+);
+
+const ExercisesView = () => (
+  <div className="space-y-12">
+    <section>
+      <SectionHeader
+        title="All Tasks"
+        accent={colors.primary}
+        link={{ label: "Pending + recent", primary: false }}
+      />
+      <div className="flex flex-col gap-4">
+        {pendingExercises.map((exercise) => (
+          <PendingExerciseCard key={exercise.id} exercise={exercise} />
+        ))}
+        {solvedExercises.map((exercise) => (
+          <SolvedExerciseCard key={exercise.title} exercise={exercise} />
+        ))}
+      </div>
+    </section>
+  </div>
+);
+
+const LeaderboardView = () => (
+  <div className="space-y-12">
+    <section>
+      <SectionHeader
+        title="Class Leaderboard"
+        accent="#8b5cf6"
+        link={{ label: "Sorted by total performance", primary: false }}
+      />
+      <div
+        className="bg-white border rounded-xl overflow-hidden"
+        style={{ borderColor: "#e2e8f0" }}
+      >
+        {classStudents
+          .slice()
+          .sort((a, b) => b.score - a.score)
+          .map((student, index) => (
+            <div
+              key={student.name}
+              className="flex items-center justify-between px-6 py-4 border-b last:border-b-0"
+              style={{ borderColor: "#f1f5f9" }}
+            >
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                  style={{ backgroundColor: index < 3 ? colors.primary : "#94a3b8" }}
+                >
+                  {index + 1}
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900">{student.name}</p>
+                  <p className="text-sm text-slate-500">
+                    {student.completed} exercises completed · {student.streak} day streak
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xl font-black" style={{ color: colors.primary }}>
+                  {student.score}%
+                </p>
+                <p className="text-xs uppercase tracking-widest text-slate-400 font-bold">
+                  Total performance
+                </p>
+              </div>
+            </div>
+          ))}
+      </div>
+    </section>
+  </div>
+);
+
+const SettingsView = () => (
+  <div className="space-y-12">
+    <section>
+      <SectionHeader
+        title="Settings"
+        accent="#f59e0b"
+        link={{ label: "Student preferences", primary: false }}
+      />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {settingsSections.map((section) => (
+          <div
+            key={section.title}
+            className="bg-white border rounded-xl p-5"
+            style={{ borderColor: "#e2e8f0" }}
+          >
+            <h4 className="font-semibold text-slate-900 mb-3">{section.title}</h4>
+            <div className="space-y-2">
+              {section.items.map((item) => (
+                <label key={item} className="flex items-center justify-between gap-3 text-sm text-slate-600">
+                  <span>{item}</span>
+                  <input type="checkbox" defaultChecked className="accent-blue-600" />
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  </div>
+);
+
+const ResourcesView = () => (
+  <div className="space-y-12">
+    <section>
+      <SectionHeader
+        title="Demo Resources"
+        accent="#14b8a6"
+        link={{ label: "Videos, guides and references", primary: false }}
+      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {demoResources.map((resource) => (
+          <div
+            key={resource.title}
+            className="bg-white border rounded-xl p-5"
+            style={{ borderColor: "#e2e8f0" }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span
+                className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded-full"
+                style={{ backgroundColor: "#ecfeff", color: "#0f766e" }}
+              >
+                {resource.type}
+              </span>
+              <span className="text-xs text-slate-400 font-semibold">
+                {resource.duration}
+              </span>
+            </div>
+            <h4 className="text-lg font-semibold text-slate-900 mb-2">
+              {resource.title}
+            </h4>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              {resource.description}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  </div>
+);
+
+const AiTutorView = () => (
+  <div className="space-y-12">
+    <WelcomeSection />
+    <AiInsightCard />
+  </div>
+);
+
+const BottomNav = ({ activeView, onNavigate }) => {
   const items = [
-    { icon: Home, label: "Home", active: true },
-    { icon: Code2, label: "Exercises", active: false },
-    { icon: BarChart3, label: "Rank", active: false },
-    { icon: Brain, label: "AI", active: false },
-    { icon: Settings, label: "Settings", active: false },
+    { key: "home", icon: Home, label: "Home" },
+    { key: "exercises", icon: Code2, label: "Exercises" },
+    { key: "leaderboard", icon: BarChart3, label: "Rank" },
+    { key: "ai", icon: Brain, label: "AI" },
+    { key: "settings", icon: Settings, label: "Settings" },
   ];
 
   return (
@@ -514,10 +764,16 @@ const BottomNav = () => {
       className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t px-6 py-3 flex justify-between items-center z-50"
       style={{ borderColor: "#e2e8f0" }}
     >
-      {items.map(({ icon: Icon, label, active }) => (
+      {items.map(({ icon: Icon, label, key }) => {
+        const active = activeView === key;
+        return (
         <a
           key={label}
           href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate(key);
+          }}
           className="flex flex-col items-center gap-1"
           style={{ color: active ? colors.primary : "#94a3b8" }}
         >
@@ -529,7 +785,8 @@ const BottomNav = () => {
             {label}
           </span>
         </a>
-      ))}
+        );
+      })}
     </nav>
   );
 };
@@ -537,6 +794,25 @@ const BottomNav = () => {
 // ----- Componente principal -----
 
 export default function StudentDashboard() {
+  const [view, setView] = React.useState("home");
+
+  const content = (() => {
+    switch (view) {
+      case "exercises":
+        return <ExercisesView />;
+      case "leaderboard":
+        return <LeaderboardView />;
+      case "settings":
+        return <SettingsView />;
+      case "resources":
+        return <ResourcesView />;
+      case "ai":
+        return <AiTutorView />;
+      default:
+        return <HomeView />;
+    }
+  })();
+
   return (
     <div
       className="flex min-h-screen"
@@ -546,43 +822,17 @@ export default function StudentDashboard() {
         fontFamily: "Inter, sans-serif",
       }}
     >
-      <Sidebar />
+      <Sidebar activeView={view} onNavigate={setView} />
       <main className="flex-1 md:ml-64">
-        <TopBar />
+        <TopBar
+          activeTab={view === "resources" ? "resources" : "home"}
+          onNavigate={setView}
+        />
         <div className="p-8 max-w-7xl mx-auto space-y-12">
-          <WelcomeSection />
-
-          {/* Pending Exercises */}
-          <section>
-            <SectionHeader
-              title="Pending Exercises"
-              accent={colors.primary}
-              link={{ label: "View all", primary: true }}
-            />
-            <div className="flex flex-col gap-4">
-              {pendingExercises.map((ex) => (
-                <PendingExerciseCard key={ex.id} exercise={ex} />
-              ))}
-            </div>
-          </section>
-
-          {/* Recently Solved */}
-          <section>
-            <SectionHeader
-              title="Recently Solved"
-              accent="#10b981"
-              link={{ label: "Explore history", primary: false }}
-            />
-            <div className="flex flex-col gap-4">
-              {solvedExercises.map((ex) => (
-                <SolvedExerciseCard key={ex.title} exercise={ex} />
-              ))}
-              <AiInsightCard />
-            </div>
-          </section>
+          {content}
         </div>
       </main>
-      <BottomNav />
+      <BottomNav activeView={view} onNavigate={setView} />
     </div>
   );
 }

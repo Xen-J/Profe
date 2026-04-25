@@ -18,6 +18,9 @@ import {
   FileText,
 } from "lucide-react";
 
+import Editor from "@monaco-editor/react";
+import { useState } from "react";
+
 // Paleta del tailwind.config original
 const colors = {
   primary: "#2563eb",
@@ -393,7 +396,62 @@ const ProblemDescription = ({ exercise }) => (
   </section>
 );
 
-const CodeEditor = () => (
+const CodeEditor = () => {
+  const [code, setCode] = useState(
+`print("¡Bienvenido a Profe++!")
+print("Calculando la suma de los números del 1 al 10...")
+suma = sum(range(1, 11))
+print("El resultado es:", suma)
+`
+  );
+
+  const [output, setOutput] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
+
+  const handleRunCode = async () => {
+    setIsRunning(true);
+    setOutput("Iniciando entorno Python (Pyodide)...\nEsto puede tomar unos segundos la primera vez.\n\n");
+
+    try {
+      if (!window.pyodideLoaderPromise) {
+        window.pyodideLoaderPromise = new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+          script.async = true;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.body.appendChild(script);
+        });
+      }
+
+      await window.pyodideLoaderPromise;
+
+      if (!window.pyodideInstance) {
+        window.pyodideInstance = await window.loadPyodide({
+          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/",
+        });
+
+        window.pyodideInstance.setStdout({
+          batched: (msg) => setOutput((prev) => prev + msg),
+        });
+        window.pyodideInstance.setStderr({
+          batched: (msg) => setOutput((prev) => prev + "ERROR: " + msg),
+        });
+      }
+
+      setOutput(">> Ejecutando...\n\n");
+      await window.pyodideInstance.runPythonAsync(code, {
+        filename: "exercise.py",
+      });
+      setOutput((prev) => prev + "\n[Proceso completado exitosamente]");
+    } catch (err) {
+      setOutput((prev) => prev + "\n[Excepción de Python]:\n" + err.toString());
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  return (
   <section
     className="flex-1 flex flex-col relative"
     style={{ backgroundColor: colors.editorBg }}
@@ -423,67 +481,34 @@ const CodeEditor = () => (
       </div>
     </div>
 
-    {/* IDE Content */}
-    <div
-      className="flex-1 relative overflow-hidden flex"
-      style={{ fontFamily: "'Space Grotesk', monospace", fontSize: "14px" }}
-    >
-      {/* Line numbers */}
-      <div
-        className="w-12 text-white/20 text-right pr-3 py-4 select-none border-r border-white/5"
-        style={{ backgroundColor: colors.editorBg }}
-      >
-        {Array.from({ length: 13 }, (_, i) => (
-          <div key={i}>{i + 1}</div>
-        ))}
-      </div>
-
-      {/* Code */}
-      <div className="flex-1 p-4 text-slate-300 relative leading-[1.5]">
-        <div className="mb-1">
-          <span className="text-purple-400">class</span>{" "}
-          <span className="text-yellow-200">Solution</span>:
-        </div>
-        <div className="ml-4 mb-1">
-          <span className="text-purple-400">def</span>{" "}
-          <span className="text-blue-300">findMedianSortedArrays</span>(
-          <span className="text-orange-300">self</span>,{" "}
-          <span className="text-slate-300">
-            nums1: List[int], nums2: List[int]
-          </span>
-          ) -&gt; <span className="text-blue-300">float</span>:
-        </div>
-        <div className="ml-8 mb-1 text-slate-500"># Your implementation here</div>
-        <div className="ml-8 mb-1 text-slate-500">
-          # Use binary search for O(log(min(m, n)))
-        </div>
-        <div className="ml-8 mb-1">
-          <span className="text-slate-300">m, n = </span>
-          <span className="text-blue-300">len</span>
-          <span className="text-slate-300">(nums1), </span>
-          <span className="text-blue-300">len</span>
-          <span className="text-slate-300">(nums2)</span>
-        </div>
-        <div
-          className="mb-1 -ml-4 pl-3.5 ml-4 border-l-2"
-          style={{
-            backgroundColor: "rgba(37, 99, 235, 0.2)",
-            borderColor: colors.primary,
+    {/* IDE Content & Console */}
+    <div className="flex-1 flex flex-col min-h-0 bg-[#1e1e1e]">
+      {/* Editor */}
+      <div className="flex-1 relative">
+        <Editor
+          height="100%"
+          defaultLanguage="python"
+          theme="vs-dark"
+          value={code}
+          onChange={(value) => setCode(value)}
+          options={{
+            minimap: { enabled: false },
+            fontSize: 14,
+            fontFamily: "'Space Grotesk', 'Fira Code', monospace",
+            scrollBeyondLastLine: false,
           }}
-        >
-          <span className="text-purple-400">if</span>
-          <span className="text-slate-300"> m &gt; n:</span>
+        />
+      </div>
+      
+      {/* Terminal / Console */}
+      <div className="h-48 border-t border-white/10 p-4 font-mono text-sm overflow-auto" style={{ backgroundColor: "#0d1117" }}>
+        <div className="text-white/40 mb-2 flex justify-between items-center text-xs font-semibold uppercase tracking-wider">
+          <span>Console Output</span>
+          {isRunning && <span className="text-yellow-400 animate-pulse">Running...</span>}
         </div>
-        <div className="ml-12 mb-1">
-          <span className="text-purple-400">return</span>
-          <span className="text-orange-300"> self</span>
-          <span className="text-slate-300">
-            .findMedianSortedArrays(nums2, nums1)
-          </span>
-        </div>
-        <div className="ml-8 flex animate-pulse">
-          <div className="w-2 h-5" style={{ backgroundColor: colors.primary }} />
-        </div>
+        <pre className="whitespace-pre-wrap text-slate-300">
+          {output || "Haz clic en 'Run Code' para ver el resultado."}
+        </pre>
       </div>
     </div>
 
@@ -493,9 +518,15 @@ const CodeEditor = () => (
       style={{ backgroundColor: colors.toolbarBg }}
     >
       <div className="flex items-center gap-4">
-        <button className="flex items-center gap-2 px-4 py-2 border border-white/10 rounded-lg text-white/80 hover:bg-white/5 transition-colors font-semibold text-sm">
+        <button
+          onClick={handleRunCode}
+          disabled={isRunning}
+          className={`flex items-center gap-2 px-4 py-2 border border-white/10 rounded-lg text-white/80 transition-colors font-semibold text-sm ${
+            isRunning ? "opacity-50 cursor-not-allowed" : "hover:bg-white/5"
+          }`}
+        >
           <Play className="w-4 h-4" fill="currentColor" />
-          Run Code
+          {isRunning ? "Running..." : "Run Code"}
         </button>
         <div className="h-6 w-px bg-white/10" />
         <div className="flex items-center gap-2 text-xs text-white/40">
@@ -525,6 +556,7 @@ const CodeEditor = () => (
 
     {/* AI Chat Trigger */}
     <div className="absolute bottom-24 right-6 group">
+
       <button
         className="w-14 h-14 rounded-full flex items-center justify-center text-white shadow-2xl transition-transform hover:scale-105"
         style={{
@@ -544,7 +576,8 @@ const CodeEditor = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 const MobileBottomNav = () => {
   const items = [
